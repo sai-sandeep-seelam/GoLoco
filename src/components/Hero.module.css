@@ -109,29 +109,45 @@
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
 }
 
-/* Floating Animation for SVG parts */
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-12px); }
+/* ─── Premium Floating Animations ─────────────────────────────────────────
+   Inspired by Linear / Stripe / Vercel — subtle, continuous, seamless loop.
+   cubic-bezier(0.45, 0, 0.55, 1) creates a sinusoidal-feel ease that removes
+   the hard "snap" at loop boundaries.
+──────────────────────────────────────────────────────────────────────────── */
+@keyframes floatPremium {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-8px); }
   100% { transform: translateY(0px); }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 0.9; }
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 0.85; }
 }
 
+/* Variant A — base, no delay */
 .floatElement {
-  animation: float 6s ease-in-out infinite;
+  animation: floatPremium 9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
 }
 
+/* Variant B — offset phase so elements move independently */
 .floatElementDelayed {
-  animation: float 6s ease-in-out infinite;
-  animation-delay: 2s;
+  animation: floatPremium 10.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation-delay: -3.5s; /* negative delay for immediate, phase-shifted start */
+  will-change: transform;
+}
+
+/* Variant C — third independent rhythm (use on extra particles) */
+.floatElementAlt {
+  animation: floatPremium 8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation-delay: -1.8s;
+  will-change: transform;
 }
 
 .glowCircle {
-  animation: pulse-glow 4s ease-in-out infinite;
+  animation: pulse-glow 7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: opacity;
 }
 
 @media (max-width: 1024px) {

@@ -112,28 +112,32 @@ export default function Hero({ setView }) {
             <text x="338" y="222" fill="#A78BFA" fontSize="10" fontWeight="bold" fontFamily="Inter, sans-serif">SCAN QR</text>
           </g>
 
-          {/* Floating Calendar Element */}
-          <g className={styles.floatElementDelayed} transform="translate(40, 190)">
-            <rect x="20" y="100" width="120" height="130" rx="16" fill="rgba(19, 26, 46, 0.9)" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="1.5" />
-            <rect x="20" y="100" width="120" height="35" rx="16" fill="url(#purpleBlueGrad)" />
-            <rect x="20" y="115" width="120" height="20" fill="url(#purpleBlueGrad)" />
-            
-            {/* Mini Calendar rings */}
-            <circle cx="50" cy="100" r="4" fill="#0B0F19" />
-            <circle cx="110" cy="100" r="4" fill="#0B0F19" />
+          {/* Floating Calendar Element — outer g holds the SVG position transform,
+              inner g carries the CSS float animation so translateY doesn't clobber
+              the translate(40, 190) positioning. */}
+          <g transform="translate(40, 190)">
+            <g className={styles.floatElementDelayed}>
+              <rect x="20" y="100" width="120" height="130" rx="16" fill="rgba(19, 26, 46, 0.9)" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="1.5" />
+              <rect x="20" y="100" width="120" height="35" rx="16" fill="url(#purpleBlueGrad)" />
+              <rect x="20" y="115" width="120" height="20" fill="url(#purpleBlueGrad)" />
+              
+              {/* Mini Calendar rings */}
+              <circle cx="50" cy="100" r="4" fill="#0B0F19" />
+              <circle cx="110" cy="100" r="4" fill="#0B0F19" />
 
-            <text x="80" y="123" fill="#FFFFFF" fontSize="12" fontWeight="bold" textAnchor="middle" fontFamily="Inter, sans-serif">JULY</text>
-            <text x="80" y="180" fill="#FFFFFF" fontSize="32" fontWeight="800" textAnchor="middle" fontFamily="Inter, sans-serif">24</text>
-            <text x="80" y="210" fill="var(--text-secondary)" fontSize="11" textAnchor="middle" fontFamily="Inter, sans-serif">FRIDAY</text>
+              <text x="80" y="123" fill="#FFFFFF" fontSize="12" fontWeight="bold" textAnchor="middle" fontFamily="Inter, sans-serif">JULY</text>
+              <text x="80" y="180" fill="#FFFFFF" fontSize="32" fontWeight="800" textAnchor="middle" fontFamily="Inter, sans-serif">24</text>
+              <text x="80" y="210" fill="var(--text-secondary)" fontSize="11" textAnchor="middle" fontFamily="Inter, sans-serif">FRIDAY</text>
+            </g>
           </g>
 
           {/* Stage / Wave/ Particles */}
           <path d="M50 420 Q150 370 250 420 T450 420" stroke="url(#purpleBlueGrad)" strokeWidth="4" opacity="0.3" />
           <path d="M20 440 Q150 400 280 450 T480 430" stroke="url(#borderGradient)" strokeWidth="2" opacity="0.2" />
 
-          {/* Sphere points */}
+          {/* Sphere points — each on its own independent float rhythm */}
           <circle cx="410" cy="360" r="8" fill="#60A5FA" opacity="0.7" className={styles.floatElement} />
-          <circle cx="60" cy="180" r="14" fill="#7C3AED" opacity="0.5" className={styles.floatElementDelayed} />
+          <circle cx="60" cy="180" r="14" fill="#7C3AED" opacity="0.5" className={styles.floatElementAlt} />
           <circle cx="430" cy="110" r="6" fill="#FBBF24" opacity="0.6" />
 
           {/* Definitions for gradients */}
