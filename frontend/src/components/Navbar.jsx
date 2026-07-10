@@ -51,12 +51,14 @@ export default function Navbar() {
         >
           Home
         </button>
-        <button 
-          className={`${styles.navLink} ${(location.pathname === '/events' || location.pathname === '/attendee') ? styles.activeNavLink : ''}`}
-          onClick={() => handleNavigate(isAuthenticated && user?.role === 'Attendee' ? '/attendee' : '/events')}
-        >
-          Browse Events
-        </button>
+        {user?.role !== 'Organizer' && (
+          <button 
+            className={`${styles.navLink} ${(location.pathname === '/events' || location.pathname === '/attendee') ? styles.activeNavLink : ''}`}
+            onClick={() => handleNavigate(isAuthenticated && user?.role === 'Attendee' ? '/attendee' : '/events')}
+          >
+            Browse Events
+          </button>
+        )}
         
         {/* Conditional Navigation Links based on User Role */}
         {isAuthenticated && user?.role === 'Organizer' && (
@@ -122,15 +124,17 @@ export default function Navbar() {
           >
             Home
           </button>
-          <button 
-            onClick={() => handleNavigate(isAuthenticated && user?.role === 'Attendee' ? '/attendee' : '/events')} 
-            style={{ 
-              color: (location.pathname === '/events' || location.pathname === '/attendee') ? 'var(--accent-purple)' : 'var(--text-primary)', 
-              fontSize: '1.1rem', fontWeight: 600, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer'
-            }}
-          >
-            Browse Events
-          </button>
+          {user?.role !== 'Organizer' && (
+            <button 
+              onClick={() => handleNavigate(isAuthenticated && user?.role === 'Attendee' ? '/attendee' : '/events')} 
+              style={{ 
+                color: (location.pathname === '/events' || location.pathname === '/attendee') ? 'var(--accent-purple)' : 'var(--text-primary)', 
+                fontSize: '1.1rem', fontWeight: 600, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer'
+              }}
+            >
+              Browse Events
+            </button>
+          )}
 
           {isAuthenticated && user?.role === 'Organizer' && (
             <button 

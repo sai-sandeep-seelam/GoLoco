@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Select from 'react-select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PlusCircle, BarChart3, Users, DollarSign, Star, Calendar, MapPin, 
@@ -12,6 +13,60 @@ import OrganizerEventRow from './organizer/OrganizerEventRow';
 import EditEventModal from './organizer/EditEventModal';
 import bookingService from '../services/bookingService';
 import { mapEventDtos } from '../utils/eventMapper';
+
+const LOCATION_OPTIONS = [
+  { value: 'Mumbai',    label: 'Mumbai' },
+  { value: 'Bengaluru', label: 'Bengaluru' },
+  { value: 'Delhi',     label: 'Delhi' },
+  { value: 'Hyderabad', label: 'Hyderabad' },
+  { value: 'Pune',      label: 'Pune' },
+  { value: 'Chennai',   label: 'Chennai' },
+  { value: 'Remote',    label: 'Online (Remote)' },
+];
+
+const selectStyles = {
+  control: (base, state) => ({
+    ...base,
+    background: state.isFocused ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)',
+    border: `1px solid ${state.isFocused ? 'var(--accent-purple)' : 'rgba(255,255,255,0.08)'}`,
+    borderRadius: 'var(--radius-sm)',
+    boxShadow: state.isFocused ? '0 0 10px rgba(124,58,237,0.15)' : 'none',
+    padding: '0.05rem 0.25rem',
+    minHeight: 'unset',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      borderColor: state.isFocused ? 'var(--accent-purple)' : 'rgba(255,255,255,0.2)',
+    },
+  }),
+  valueContainer: (base) => ({ ...base, padding: '0.55rem 0.75rem' }),
+  singleValue: (base) => ({ ...base, color: '#FFFFFF', fontSize: '0.95rem', fontFamily: 'inherit', margin: 0 }),
+  placeholder: (base) => ({ ...base, color: 'rgba(255,255,255,0.35)', fontSize: '0.95rem' }),
+  input: (base) => ({ ...base, color: '#FFFFFF', margin: 0, padding: 0 }),
+  dropdownIndicator: (base) => ({ ...base, color: '#FFFFFF', padding: '0 0.5rem', '&:hover': { color: '#FFFFFF' } }),
+  indicatorSeparator: () => ({ display: 'none' }),
+  menu: (base) => ({
+    ...base,
+    background: '#13172a',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 'var(--radius-sm)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    overflow: 'hidden',
+    zIndex: 9999,
+  }),
+  menuList: (base) => ({ ...base, padding: '0.25rem' }),
+  option: (base, state) => ({
+    ...base,
+    background: state.isFocused ? 'rgba(124,58,237,0.25)' : 'transparent',
+    color: state.isFocused ? '#C084FC' : '#FFFFFF',
+    fontSize: '0.95rem',
+    fontFamily: 'inherit',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    padding: '0.55rem 0.9rem',
+    transition: 'background 0.15s ease',
+  }),
+};
 
 export default function OrganizerPortal({ eventList: initialEventList, setEventList: setParentEventList, bookedTickets }) {
   const { token } = useAuth();
@@ -437,19 +492,16 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
             <div className={styles.formRow}>
               <div className={styles.inputGroup}>
                 <label htmlFor="location">Location / City</label>
-                <select 
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                >
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Bengaluru">Bengaluru</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Hyderabad">Hyderabad</option>
-                  <option value="Pune">Pune</option>
-                  <option value="Chennai">Chennai</option>
-                  <option value="Remote">Online (Remote)</option>
-                </select>
+                <Select
+                  inputId="location"
+                  options={LOCATION_OPTIONS}
+                  value={LOCATION_OPTIONS.find(opt => opt.value === location) ?? null}
+                  onChange={(selected) => setLocation(selected?.value ?? '')}
+                  isSearchable={false}
+                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                />
               </div>
 
               <div className={styles.inputGroup}>

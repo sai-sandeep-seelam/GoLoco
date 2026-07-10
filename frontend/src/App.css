@@ -192,6 +192,16 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
   padding: 1rem;
   border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.ticket-tier.selected {
+  border: 2px solid var(--accent-purple);
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.ticket-tier.selected h4 {
+  color: var(--accent-purple) !important;
 }
 
 .tier-desc {

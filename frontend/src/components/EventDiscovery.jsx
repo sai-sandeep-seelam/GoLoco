@@ -273,7 +273,7 @@ export default function EventDiscovery({ filters, setFilters, onReset }) {
 
         {/* Reset Button */}
         <button 
-          className={`${styles.resetIconBtn} ${styles.hasTooltip}`}
+          className={`${styles.resetIconBtn}`}
           onClick={onReset}
           type="button"
         >

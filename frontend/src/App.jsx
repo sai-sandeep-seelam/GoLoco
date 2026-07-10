@@ -477,8 +477,8 @@ export default function App() {
                       <div className="ticket-types-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
                         {ticketTypes.map(tt => (
                           <div 
-                            key={tt.name}
-                            className={`ticket-tier ${selectedTicketType?.name === tt.name ? 'selected' : ''}`}
+                            key={tt.id}
+                            className={`ticket-tier ${selectedTicketType?.id === tt.id ? 'selected' : ''}`}
                             onClick={() => {
                               if (selectedTicketType?.id !== tt.id) {
                                 setSelectedTicketType(tt);
@@ -487,12 +487,11 @@ export default function App() {
                             }}
                             style={{ 
                               cursor: 'pointer', 
-                              border: selectedTicketType?.name === tt.name ? '2px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
                               opacity: tt.capacity <= 0 ? 0.5 : 1
                             }}
                           >
                             <div>
-                              <h4 style={{ color: selectedTicketType?.name === tt.name ? 'var(--accent-primary)' : 'var(--text-primary)' }}>{tt.name}</h4>
+                              <h4>{tt.name}</h4>
                               <p className="tier-desc">
                                 {tt.capacity <= 0 ? (
                                   <span style={{ color: '#f87171', fontWeight: 600 }}>Sold Out</span>

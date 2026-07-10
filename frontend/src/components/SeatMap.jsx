@@ -114,8 +114,8 @@ export default function SeatMap({
         <div className={styles.tierTabs}>
           {ticketTypes.map(tt => (
             <button
-              key={tt.name}
-              className={`${styles.tierTab} ${selectedTicketType?.name === tt.name ? styles.tierTabActive : ''}`}
+              key={tt.id}
+              className={`${styles.tierTab} ${selectedTicketType?.id === tt.id ? styles.tierTabActive : ''}`}
               onClick={() => onSelectTicketType(tt)}
             >
               {tt.name} — ₹{tt.price}

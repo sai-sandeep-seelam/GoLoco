@@ -38,24 +38,37 @@ var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 // touching code. In production, set via Azure App Service → Application Settings:
 //   AllowedOrigins__0 = https://your-frontend.azurestaticapps.net
 //   AllowedOrigins__1 = https://www.your-custom-domain.com   (if applicable)
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:5173" };
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactPolicy", policy =>
     {
-        policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.WithOrigins(
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "http://127.0.0.1:5173",
+                "http://127.0.0.1:5174"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
     });
 });
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -144,11 +157,13 @@ if (enableSwagger)
 
 // Azure App Service handles TLS termination at the load balancer level,
 // so HTTPS redirection inside the container would redirect to a port that
-// doesn't exist. Only redirect in Development (where it is meaningful).
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+// doesn't exist. 
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseHttpsRedirection();
+// }
+
+app.UseRouting();
 
 // CORS must be called before Authentication and Authorization
 app.UseCors("ReactPolicy");

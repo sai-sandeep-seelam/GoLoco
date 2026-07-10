@@ -191,7 +191,10 @@
   transition: all 0.2s ease;
   width: 100%;
 }
-
+.inputGroup input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
 .inputGroup input:focus,
 .inputGroup select:focus,
 .inputGroup textarea:focus {
