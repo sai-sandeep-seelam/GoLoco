@@ -39,7 +39,27 @@ namespace OnlineEventTicketManagement.Controllers
                 return BadRequest(ModelState);
             }
 
-            var response = await _authService.LoginAsync(loginDto);
+            }
+            try
+            {
+                var response = await _authService.LoginAsync(loginDto);
+
+                if (response == null)
+                {
+                    return Unauthorized(new { message = "Invalid email or password." });
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Error = ex.Message,
+                    Inner = ex.InnerException?.Message,
+                    Stack = ex.StackTrace
+                });
+            }
             if (response == null)
             {
                 return Unauthorized(new { message = "Invalid email or password." });
