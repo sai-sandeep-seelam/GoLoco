@@ -29,8 +29,21 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ─── JWT Authentication ───────────────────────────────────────────────────────
 // In production, set via Azure App Service → Application Settings:
 //   JwtSettings__Key | JwtSettings__Issuer | JwtSettings__Audience
-var jwtKey = builder.Configuration["JwtSettings:Key"]
-    ?? throw new InvalidOperationException("JwtSettings:Key is not configured. Set it as an Azure App Service Application Setting.");
+// ─── JWT DEBUG (Temporary) ────────────────────────────────────────────────────
+var jwtKey = builder.Configuration["JwtSettings:Key"];
+
+Console.WriteLine("========== JWT DEBUG ==========");
+Console.WriteLine($"JWT Key: '{jwtKey}'");
+Console.WriteLine($"JWT Length: {(jwtKey == null ? "NULL" : jwtKey.Length.ToString())}");
+Console.WriteLine($"Issuer: '{builder.Configuration["JwtSettings:Issuer"]}'");
+Console.WriteLine($"Audience: '{builder.Configuration["JwtSettings:Audience"]}'");
+Console.WriteLine("================================");
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new Exception("JWT key is NULL or EMPTY");
+}
+
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
