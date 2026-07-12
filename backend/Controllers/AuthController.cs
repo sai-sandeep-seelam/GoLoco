@@ -23,9 +23,13 @@ namespace OnlineEventTicketManagement.Controllers
             }
 
             var response = await _authService.RegisterAsync(registerDto);
+
             if (response == null)
             {
-                return BadRequest(new { message = "Email is already in use or registration failed." });
+                return BadRequest(new
+                {
+                    message = "Email is already in use or registration failed."
+                });
             }
 
             return Ok(response);
@@ -40,9 +44,13 @@ namespace OnlineEventTicketManagement.Controllers
             }
 
             var response = await _authService.LoginAsync(loginDto);
+
             if (response == null)
             {
-                return Unauthorized(new { message = "Invalid email or password." });
+                return Unauthorized(new
+                {
+                    message = "Invalid email or password."
+                });
             }
 
             return Ok(response);
