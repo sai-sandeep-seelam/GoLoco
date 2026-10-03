@@ -24,6 +24,17 @@ const LOCATION_OPTIONS = [
   { value: 'Remote',    label: 'Online (Remote)' },
 ];
 
+const CATEGORY_OPTIONS = [
+  { value: 'Music', label: 'Music' },
+  { value: 'Tech', label: 'Tech' },
+  { value: 'Food', label: 'Food' },
+  { value: 'Sports', label: 'Sports' },
+  { value: 'Workshop', label: 'Workshop' },
+  { value: 'Comedy', label: 'Comedy' },
+  { value: 'Festival', label: 'Festival' },
+  { value: 'Education', label: 'Education' }
+];
+
 const selectStyles = {
   control: (base, state) => ({
     ...base,
@@ -187,31 +198,38 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
     workshop: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=800"
   };
 
-  // Analytics driven from the live myEvents list
+  // Analytics driven from the live myEvents list and actual database bookings
   const metrics = React.useMemo(() => {
-    let revenue = 0;
-    let ticketsCount = 0;
+    let dbRevenue = 0;
+    let dbTicketsCount = 0;
     
+    // 1. Calculate totals from the database bookings
+    organizerBookings.forEach(booking => {
+      dbTicketsCount += (booking.numberOfTickets || 0);
+      dbRevenue += (booking.totalPrice || 0);
+    });
+
+    // 2. Add local state bookings (for optimistic UI updates during the current session)
+    let localRevenue = 0;
+    let localTicketsCount = 0;
     bookedTickets.forEach(booking => {
-      ticketsCount += booking.quantity;
-      if (booking.amount !== 'Free') {
-        revenue += parseFloat(booking.amount.replace(/[^0-9.]/g, ''));
+      localTicketsCount += (booking.quantity || 0);
+      if (booking.amount && booking.amount !== 'Free') {
+        localRevenue += parseFloat(booking.amount.replace(/[^0-9.]/g, '')) || 0;
       }
     });
 
     const totalListedEvents = myEvents.length;
-    const initialTicketsSold = 3450;
-    const initialRevenue = 2850000;
     const totalRating = totalListedEvents * 4.8;
     const avgRating = totalListedEvents > 0 ? (totalRating / totalListedEvents).toFixed(1) : '0.0';
 
     return {
       listedEvents: totalListedEvents,
-      ticketsSold: initialTicketsSold + ticketsCount,
-      revenue: initialRevenue + revenue,
+      ticketsSold: dbTicketsCount + localTicketsCount,
+      revenue: dbRevenue + localRevenue,
       avgRating,
     };
-  }, [myEvents, bookedTickets]);
+  }, [myEvents, bookedTickets, organizerBookings]);
 
   // ─── Create Event: wired to POST /api/events ────────────────────────────
   // The JWT is automatically attached by apiClient.js (reads from localStorage).
@@ -387,7 +405,7 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
             <span>Total Tickets Sold</span>
             <Users className={styles.metricIconBlue} size={20} />
           </div>
-          <div className={styles.metricValue}>{metrics.ticketsSold.toLocaleString()}</div>
+          <div className={styles.metricValue}>{metrics.ticketsSold.toLocaleString('en-IN')}</div>
           <div className={styles.metricSubtext}>+ {bookedTickets.reduce((a,c)=>a+c.quantity, 0)} sold this session</div>
         </div>
 
@@ -396,7 +414,7 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
             <span>Estimated Revenue</span>
             <DollarSign className={styles.metricIconGreen} size={20} />
           </div>
-          <div className={styles.metricValue}>₹{metrics.revenue.toLocaleString()}</div>
+          <div className={styles.metricValue}>₹{metrics.revenue.toLocaleString('en-IN')}</div>
           <div className={styles.metricSubtext}>Base ticket sales (platform fees excl.)</div>
         </div>
 
@@ -446,20 +464,16 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
 
               <div className={styles.inputGroup}>
                 <label htmlFor="category">Category</label>
-                <select 
-                  id="category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  <option value="Music">Music</option>
-                  <option value="Tech">Tech</option>
-                  <option value="Food">Food</option>
-                  <option value="Sports">Sports</option>
-                  <option value="Workshop">Workshop</option>
-                  <option value="Comedy">Comedy</option>
-                  <option value="Festival">Festival</option>
-                  <option value="Education">Education</option>
-                </select>
+                <Select
+                  inputId="category"
+                  options={CATEGORY_OPTIONS}
+                  value={CATEGORY_OPTIONS.find(opt => opt.value === category) ?? null}
+                  onChange={(selected) => setCategory(selected?.value ?? '')}
+                  isSearchable={false}
+                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                />
               </div>
             </div>
 
