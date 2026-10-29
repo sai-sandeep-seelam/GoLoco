@@ -11,8 +11,14 @@ namespace OnlineEventTicketManagement.Interfaces
     /// </summary>
     public interface IBookingService
     {
-        Task<IEnumerable<BookingDto>> GetAllBookingsAsync();
-        Task<BookingDto?> GetBookingByIdAsync(int id);
+        /// <summary>Bookings for events organized by this user (no ticket codes).</summary>
+        Task<IEnumerable<BookingDto>> GetBookingsForOrganizerAsync(int organizerId);
+
+        /// <summary>One booking, only if the requester owns it or organizes its event; otherwise null.</summary>
+        Task<BookingDto?> GetBookingByIdAsync(int id, int requesterId);
+
+        /// <summary>Validates a ticket code at the door and marks it used (once).</summary>
+        Task<CheckInResultDto> CheckInAsync(string code, int? eventId, int organizerId);
         Task<IEnumerable<BookingDto>> GetBookingsForUserAsync(int userId);
         Task<BookingDto> CreateBookingAsync(CreateBookingDto createBookingDto, int userId);
     }

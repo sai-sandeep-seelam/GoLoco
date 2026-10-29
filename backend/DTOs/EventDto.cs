@@ -19,5 +19,7 @@ namespace OnlineEventTicketManagement.DTOs
         public string OrganizerName { get; set; } = string.Empty;
         /// <summary>Azure Blob Storage URL of the event poster. Null when no image has been uploaded.</summary>
         public string? ImageUrl { get; set; }
+        /// <summary>Event category. Null for events created before categories were stored.</summary>
+        public string? Category { get; set; }
     }
 }

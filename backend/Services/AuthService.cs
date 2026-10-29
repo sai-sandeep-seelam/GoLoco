@@ -15,11 +15,13 @@ namespace OnlineEventTicketManagement.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IUserRepository userRepository, IConfiguration configuration)
+        public AuthService(IUserRepository userRepository, IConfiguration configuration, IEmailService emailService)
         {
             _userRepository = userRepository;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -54,6 +56,9 @@ namespace OnlineEventTicketManagement.Services
             {
                 return null;
             }
+
+            // Welcome email: not awaited and never throws, so it cannot delay or fail registration
+            _ = _emailService.SendWelcomeEmailAsync(user.Name, user.Email);
 
             // 5. Generate and return JWT auth token
             string token = GenerateJwtToken(user);

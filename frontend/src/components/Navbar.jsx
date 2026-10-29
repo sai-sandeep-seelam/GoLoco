@@ -70,6 +70,15 @@ export default function Navbar() {
           </button>
         )}
 
+        {isAuthenticated && user?.role === 'Organizer' && (
+          <button
+            className={`${styles.navLink} ${location.pathname === '/organizer/check-in' ? styles.activeNavLink : ''}`}
+            onClick={() => handleNavigate('/organizer/check-in')}
+          >
+            Check-in
+          </button>
+        )}
+
         {isAuthenticated && user?.role === 'Attendee' && (
           <button 
             className={`${styles.navLink} ${location.pathname === '/bookings' ? styles.activeNavLink : ''}`}
@@ -145,6 +154,18 @@ export default function Navbar() {
               }}
             >
               Organizer Portal
+            </button>
+          )}
+
+          {isAuthenticated && user?.role === 'Organizer' && (
+            <button 
+              onClick={() => handleNavigate('/organizer/check-in')} 
+              style={{ 
+                color: location.pathname === '/organizer/check-in' ? 'var(--accent-purple)' : 'var(--text-primary)', 
+                fontSize: '1.1rem', fontWeight: 600, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer'
+              }}
+            >
+              Check-in
             </button>
           )}
 

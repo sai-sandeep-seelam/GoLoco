@@ -61,6 +61,11 @@ namespace OnlineEventTicketManagement.Data
                 .HasForeignKey(s => s.BookingId)
                 .OnDelete(DeleteBehavior.SetNull); // If a Booking is deleted, release the seats (set BookingId to Null)
 
+            // 8. Ticket codes are unique (EF creates the index filtered to non-NULL codes)
+            modelBuilder.Entity<Booking>()
+                .HasIndex(b => b.TicketCode)
+                .IsUnique();
+
             // 7. One TicketType has many Bookings (linked via TicketTypeId)
             modelBuilder.Entity<Booking>()
                 .HasOne(b => b.TicketType)

@@ -30,6 +30,10 @@ namespace OnlineEventTicketManagement.Models
         /// </summary>
         public string? ImageUrl { get; set; }
 
+        /// <summary>Event category chosen by the organizer (e.g. "Music"). Null for events created before categories were stored.</summary>
+        [StringLength(50)]
+        public string? Category { get; set; }
+
         // Foreign Key: One organizer (User) creates many events
         [Required]
         public int OrganizerId { get; set; }

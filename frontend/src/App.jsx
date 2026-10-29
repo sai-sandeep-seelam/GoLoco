@@ -10,6 +10,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Bookings from './pages/Bookings';
+import CheckIn from './pages/CheckIn';
 import AccessDenied from './pages/AccessDenied';
 import { useAuth } from './context/AuthContext';
 import { Ticket, X, CheckCircle, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
@@ -39,6 +40,7 @@ export default function App() {
   const navigate = useNavigate();
   const { isAuthenticated, role } = useAuth();
   const [bookedTickets, setBookedTickets] = useState([]);
+  const [confirmedTicketCode, setConfirmedTicketCode] = useState(null);
 
   // Fetch all events on mount
   useEffect(() => {
@@ -167,14 +169,16 @@ export default function App() {
 
     try {
       // 1. POST /api/bookings — automatically attaches JWT from localStorage via apiClient
-      await bookingService.createBooking({
+      const createdBooking = await bookingService.createBooking({
         eventId: selectedEvent.id,
         ticketTypeId: selectedTicketType?.id,
         numberOfTickets: ticketQuantity,
         seatNumbers: Array.from(selectedSeats)
       });
+      // The real ticket code returned by the backend (shown as the QR on the confirmation screen)
+      setConfirmedTicketCode(createdBooking?.ticketCode || null);
 
-      // 2. Refresh the global events list to sync available tickets from Azure SQL
+      // 2. Refresh the global events list to sync available tickets from the database
       const dtos = await eventService.getAllEvents();
       setEventList(mapEventDtos(dtos));
 
@@ -223,6 +227,7 @@ export default function App() {
   const closeModal = () => {
     setSelectedEvent(null);
     setBookingConfirmed(false);
+    setConfirmedTicketCode(null);
     setBookingError('');
     setTicketTypes([]);
     setSelectedTicketType(null);
@@ -423,6 +428,13 @@ export default function App() {
                     setEventList={setEventList}
                     bookedTickets={bookedTickets}
                   />
+                </motion.div>
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/check-in" element={
+              <ProtectedRoute allowedRole="Organizer">
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={{ duration: 0.3 }} style={{ width: '100%' }}>
+                  <CheckIn />
                 </motion.div>
               </ProtectedRoute>
             } />
@@ -638,10 +650,16 @@ export default function App() {
                     <span>{selectedEvent.price === 'Free' ? 'Free' : `₹${(totalPrice + bookingFee).toFixed(2)}`}</span>
                   </div>
 
-                  <div className="qr-container">
-                    <DownloadableQRCode value={bookedTickets[0]?.id || `GOLOCO-${Math.floor(100000 + Math.random() * 900000)}`} size={120} />
-                    <span className="qr-label">TICKET ID: {bookedTickets[0]?.id || `GOLOCO-${Math.floor(100000 + Math.random() * 900000)}`}</span>
-                  </div>
+                  {confirmedTicketCode ? (
+                    <div className="qr-container">
+                      <DownloadableQRCode value={confirmedTicketCode} size={120} />
+                      <span className="qr-label">SHOW THIS QR AT ENTRY (also in My Bookings)</span>
+                    </div>
+                  ) : (
+                    <div className="qr-container">
+                      <span className="qr-label">Your ticket QR is in My Bookings</span>
+                    </div>
+                  )}
                 </div>
 
                 <button className="done-btn" onClick={closeModal}>

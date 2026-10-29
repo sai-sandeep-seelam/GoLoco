@@ -99,6 +99,7 @@ namespace OnlineEventTicketManagement.Services
                 Date = createEventDto.Date,
                 Location = createEventDto.Location,
                 TotalCapacity = createEventDto.TotalCapacity,
+                Category = string.IsNullOrWhiteSpace(createEventDto.Category) ? null : createEventDto.Category.Trim(),
                 OrganizerId = organizerId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -165,6 +166,9 @@ namespace OnlineEventTicketManagement.Services
             e.Date = updateEventDto.Date;
             e.Location = updateEventDto.Location;
             e.TotalCapacity = updateEventDto.TotalCapacity;
+            // Only change the category when one is supplied; otherwise keep the existing value
+            if (!string.IsNullOrWhiteSpace(updateEventDto.Category))
+                e.Category = updateEventDto.Category.Trim();
             e.UpdatedAt = DateTime.UtcNow;
 
             // Replace image: delete old blob → upload new blob → store new URL
@@ -221,7 +225,8 @@ namespace OnlineEventTicketManagement.Services
             Price = e.TicketTypes != null && e.TicketTypes.Any() ? e.TicketTypes.Min(tt => tt.Price) : 0,
             OrganizerId = e.OrganizerId,
             OrganizerName = e.Organizer?.Name ?? "Unknown",
-            ImageUrl = e.ImageUrl
+            ImageUrl = e.ImageUrl,
+            Category = e.Category
         };
     }
 }

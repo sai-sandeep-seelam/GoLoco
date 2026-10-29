@@ -22,6 +22,9 @@ namespace OnlineEventTicketManagement.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "Total capacity must be at least 1")]
         public int TotalCapacity { get; set; }
 
+        [StringLength(50, ErrorMessage = "Category cannot exceed 50 characters")]
+        public string? Category { get; set; }
+
         // One or more ticket categories (e.g. VIP, General Admission) submitted with the event
         public List<CreateTicketTypeDto> TicketTypes { get; set; } = new List<CreateTicketTypeDto>();
     }

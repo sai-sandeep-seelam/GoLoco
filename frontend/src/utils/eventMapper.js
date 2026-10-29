@@ -15,25 +15,46 @@ const presets = {
   music: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=800",
   tech: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800",
   food: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=800",
-  sports: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=800",
-  comedy: "https://images.unsplash.com/photo-1585699324551-f6c309eed262?auto=format&fit=crop&q=80&w=800",
+  sports: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&q=80&w=800",
+  comedy: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?auto=format&fit=crop&q=80&w=800",
   workshop: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=800"
 };
 
-const categories = ["Music", "Tech", "Food", "Sports", "Workshop", "Comedy", "Festival", "Education"];
+// Which preset poster belongs to each category. Festival, Education and Business
+// have no preset of their own, so they borrow the closest one.
+export const CATEGORY_PRESET_KEY = {
+  Music: "music",
+  Tech: "tech",
+  Food: "food",
+  Sports: "sports",
+  Comedy: "comedy",
+  Workshop: "workshop",
+  Festival: "music",
+  Education: "workshop",
+  Business: "tech"
+};
+
+// Options for the category dropdowns (organizer create form and edit modal)
+export const CATEGORY_OPTIONS = Object.keys(CATEGORY_PRESET_KEY).map(c => ({ value: c, label: c }));
+
+export const presetKeyForCategory = (category) => CATEGORY_PRESET_KEY[category] || "tech";
+
+export { presets as IMAGE_PRESETS };
+
+// Shown for events created before the category was stored in the database
+const DEFAULT_CATEGORY = "General";
 const prices = ["₹499", "₹999", "₹1500", "₹2500", "Free", "₹3000", "₹750"];
 
 export function mapEventDtoToFrontend(dto) {
   // Deterministic mocking based on ID so the UI doesn't jump randomly on every re-render
   const idHash = typeof dto.id === 'number' ? dto.id : 1;
-  const category = categories[idHash % categories.length];
+  const category = dto.category || DEFAULT_CATEGORY;
   const price = (dto.price === undefined || dto.price === null) 
     ? prices[idHash % prices.length] 
     : (dto.price === 0 ? "Free" : `₹${dto.price}`);
   
-  // Try to pick an image preset based on the category name
-  const presetKey = Object.keys(presets).find(k => category.toLowerCase().includes(k)) || "tech";
-  const image = dto.imageUrl || presets[presetKey];
+  // No uploaded poster: fall back to the preset that matches the category
+  const image = dto.imageUrl || presets[presetKeyForCategory(category)];
 
   // Calculate startsInDays
   const eventDate = new Date(dto.date);

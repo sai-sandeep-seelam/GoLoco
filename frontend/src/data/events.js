@@ -92,7 +92,7 @@ export const events = [
   {
     id: 6,
     title: "IPL Fan Fest",
-    image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=800",
+    image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&q=80&w=800",
     date: "July 30, 2026",
     time: "18:00 - 23:00",
     location: "Chennai",
@@ -146,7 +146,7 @@ export const events = [
   {
     id: 9,
     title: "Stand-Up Comedy Showdown",
-    image: "https://images.unsplash.com/photo-1585699324551-f6c309eed262?auto=format&fit=crop&q=80&w=800",
+    image: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?auto=format&fit=crop&q=80&w=800",
     date: "July 15, 2026",
     time: "19:30 - 21:30",
     location: "Bengaluru",

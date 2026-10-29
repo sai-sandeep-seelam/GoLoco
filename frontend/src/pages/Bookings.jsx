@@ -7,7 +7,7 @@ import DownloadableQRCode from '../components/DownloadableQRCode';
 
 /**
  * Bookings page — Attendee-only protected route.
- * Connects to GET /api/bookings to show the logged-in attendee's bookings.
+ * Connects to GET /api/bookings/my to show the logged-in attendee's bookings.
  */
 export default function Bookings() {
   const { user } = useAuth();
@@ -22,11 +22,9 @@ export default function Bookings() {
       setLoading(true);
       setError(null);
       try {
-        const allBookings = await bookingService.getUserBookings();
+        // The backend returns only this attendee's own bookings
+        const myBookings = await bookingService.getMyBookings();
         if (mounted && user) {
-          // Backend returns all bookings; filter client-side to only show this user's tickets
-          // Since AuthResponseDto doesn't return user.id, we filter by userName.
-          const myBookings = allBookings.filter(b => b.userName === user.name);
           // Sort by booking date descending (newest first)
           myBookings.sort((a, b) => new Date(b.bookingDate) - new Date(a.bookingDate));
           setBookings(myBookings);
@@ -212,10 +210,32 @@ export default function Bookings() {
                 paddingLeft: '1.5rem', 
                 minWidth: '150px' 
               }}>
-                <DownloadableQRCode value={`GOLOCO-${booking.id}`} size={80} />
+                {booking.ticketCode ? (
+                  <div style={{ opacity: booking.checkedInAt ? 0.35 : 1 }}>
+                    <DownloadableQRCode value={booking.ticketCode} size={80} />
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                    Ticket code not available
+                  </span>
+                )}
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', letterSpacing: '1px', fontWeight: 600, marginTop: '0.5rem' }}>
                   ID: {booking.id}
                 </span>
+                {booking.checkedInAt && (
+                  <span style={{
+                    fontSize: '0.75rem',
+                    background: 'rgba(148, 163, 184, 0.18)',
+                    color: '#cbd5e1',
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: '9999px',
+                    fontWeight: 700,
+                    marginTop: '0.5rem',
+                    textAlign: 'center'
+                  }}>
+                    USED · {formatDate(booking.checkedInAt)} {formatTime(booking.checkedInAt)}
+                  </span>
+                )}
                 <span style={{ 
                   fontSize: '0.85rem', 
                   fontWeight: 700, 

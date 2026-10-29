@@ -92,7 +92,38 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+// Image storage: "S3" or "Azure" (default: Azure, the current behaviour)
+var storageProvider = builder.Configuration["Storage:Provider"] ?? "Azure";
+if (string.Equals(storageProvider, "S3", StringComparison.OrdinalIgnoreCase))
+{
+    // Uses the default AWS credential chain (aws configure locally, IAM role in AWS)
+    builder.Services.AddSingleton<Amazon.S3.IAmazonS3>(_ =>
+        new Amazon.S3.AmazonS3Client(Amazon.RegionEndpoint.GetBySystemName(
+            builder.Configuration["AwsS3:Region"]
+                ?? throw new InvalidOperationException("AwsS3:Region is not configured."))));
+    builder.Services.AddScoped<IBlobStorageService, S3StorageService>();
+    // Ticket QR images (qr/{code}.png) are created and linked in emails only with S3 storage
+    builder.Services.AddSingleton<ITicketQrService, S3TicketQrService>();
+}
+else
+{
+    builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+    builder.Services.AddSingleton<ITicketQrService, NoOpTicketQrService>();
+}
+// Email: Amazon SES when Email:SenderAddress is set, otherwise a no-op that only logs
+var emailSender = builder.Configuration["Email:SenderAddress"];
+if (!string.IsNullOrWhiteSpace(emailSender))
+{
+    // Uses the default AWS credential chain (aws configure locally, IAM role in AWS)
+    builder.Services.AddSingleton<Amazon.SimpleEmailV2.IAmazonSimpleEmailServiceV2>(_ =>
+        new Amazon.SimpleEmailV2.AmazonSimpleEmailServiceV2Client(Amazon.RegionEndpoint.GetBySystemName(
+            builder.Configuration["Email:Region"] is { Length: > 0 } emailRegion ? emailRegion : "ap-south-1")));
+    builder.Services.AddSingleton<IEmailService, SesEmailService>();
+}
+else
+{
+    builder.Services.AddSingleton<IEmailService, NoOpEmailService>();
+}
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
@@ -137,6 +168,19 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Report once at startup whether emails will actually be sent
+if (string.IsNullOrWhiteSpace(emailSender))
+{
+    app.Logger.LogInformation("Email: DISABLED (Email:SenderAddress is not set). Emails will only be logged.");
+}
+else
+{
+    app.Logger.LogInformation(
+        "Email: ENABLED via Amazon SES (sender {Sender}, region {Region}).",
+        emailSender,
+        string.IsNullOrWhiteSpace(builder.Configuration["Email:Region"]) ? "ap-south-1" : builder.Configuration["Email:Region"]);
+}
+
 // Enable Swagger
 bool enableSwagger =
     app.Environment.IsDevelopment() ||
@@ -168,6 +212,9 @@ app.UseCors("ReactPolicy");
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+// Liveness check for load balancers: no auth, no database access
+app.MapGet("/health", () => Results.Ok());
 
 app.MapControllers();
 

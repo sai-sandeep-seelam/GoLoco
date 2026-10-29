@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, AlertCircle, CheckCircle2, Calendar, MapPin, Users } from 'lucide-react';
 import eventService from '../../services/eventService';
+import { CATEGORY_OPTIONS } from '../../utils/eventMapper';
 
 /**
  * EditEventModal
@@ -26,6 +27,7 @@ export default function EditEventModal({ event, onClose, onSaved }) {
   const [date, setDate]               = useState(toDateInputValue(event.date));
   const [location, setLocation]       = useState(event.location || '');
   const [totalCapacity, setCapacity]  = useState(event.totalCapacity || 100);
+  const [category, setCategory]       = useState(event.category || '');
   const [fieldErrors, setFieldErrors] = useState({});
   const [apiError, setApiError]       = useState('');
   const [saving, setSaving]           = useState(false);
@@ -49,14 +51,14 @@ export default function EditEventModal({ event, onClose, onSaved }) {
       return;
     }
 
-    // Build payload matching CreateEventDto (same DTO is used for PUT)
-    const payload = {
-      title:         title.trim(),
-      description:   description.trim(),
-      date:          new Date(date).toISOString(),
-      location:      location.trim(),
-      totalCapacity: Number(totalCapacity),
-    };
+    // Build form data matching CreateEventDto (PUT binds the body with [FromForm])
+    const payload = new FormData();
+    payload.append('Title', title.trim());
+    payload.append('Description', description.trim());
+    payload.append('Date', new Date(date).toISOString());
+    payload.append('Location', location.trim());
+    payload.append('TotalCapacity', Number(totalCapacity));
+    if (category) payload.append('Category', category);
 
     setSaving(true);
     try {
@@ -161,7 +163,7 @@ export default function EditEventModal({ event, onClose, onSaved }) {
             <div>
               <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 700, color: '#fff' }}>Edit Event</h2>
               <p style={{ margin: '0.3rem 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                ID #{event.id} · Changes are saved to Azure SQL via PUT /api/events/{event.id}
+                ID #{event.id} · Changes are saved via PUT /api/events/{event.id}
               </p>
             </div>
             <button
@@ -272,6 +274,21 @@ export default function EditEventModal({ event, onClose, onSaved }) {
                 required
               />
               {fieldErrors.capacity && <span style={fieldErrStyle}>{fieldErrors.capacity}</span>}
+            </div>
+
+            {/* Category */}
+            <div>
+              <label style={labelStyle}>Category</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                style={inputStyle(false)}
+              >
+                {!category && <option value="" style={{ background: '#131A2E' }}>General (not set)</option>}
+                {CATEGORY_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value} style={{ background: '#131A2E' }}>{opt.label}</option>
+                ))}
+              </select>
             </div>
 
             {/* Action Buttons */}

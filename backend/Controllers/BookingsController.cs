@@ -20,14 +20,32 @@ namespace OnlineEventTicketManagement.Controllers
 
         /// <summary>
         /// GET /api/bookings
-        /// Returns all bookings. Restricted to Organizers for admin oversight.
+        /// Returns the bookings for the calling organizer's own events (no ticket codes).
+        /// Organizers only.
         /// </summary>
         [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> GetAllBookings()
+        [Authorize(Roles = "Organizer")]
+        public async Task<IActionResult> GetOrganizerBookings()
         {
-            var bookings = await _bookingService.GetAllBookingsAsync();
+            int organizerId = GetCurrentUserId();
+            var bookings = await _bookingService.GetBookingsForOrganizerAsync(organizerId);
             return Ok(bookings);
+        }
+
+        /// <summary>
+        /// POST /api/bookings/check-in
+        /// Organizer-only: validates a ticket code at the door and marks it used once.
+        /// Always answers 200 with a Result field (Admitted, AlreadyUsed, Invalid, WrongEvent, Cancelled).
+        /// </summary>
+        [HttpPost("check-in")]
+        [Authorize(Roles = "Organizer")]
+        public async Task<IActionResult> CheckIn([FromBody] CheckInRequestDto request)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            int organizerId = GetCurrentUserId();
+            var result = await _bookingService.CheckInAsync(request.Code, request.EventId, organizerId);
+            return Ok(result);
         }
 
         /// <summary>
@@ -52,14 +70,15 @@ namespace OnlineEventTicketManagement.Controllers
 
         /// <summary>
         /// GET /api/bookings/{id}
-        /// Returns a specific booking by ID.
-        /// Any authenticated user can call this endpoint.
+        /// Returns a specific booking by ID, only to the booking's owner or the organizer of its event.
+        /// (Anyone else gets 404, so booking IDs cannot be probed.)
         /// </summary>
         [HttpGet("{id}")]
         [Authorize]
         public async Task<IActionResult> GetBooking(int id)
         {
-            var booking = await _bookingService.GetBookingByIdAsync(id);
+            int currentUserId = GetCurrentUserId();
+            var booking = await _bookingService.GetBookingByIdAsync(id, currentUserId);
             if (booking == null) return NotFound(new { message = $"Booking with ID {id} was not found." });
             return Ok(booking);
         }

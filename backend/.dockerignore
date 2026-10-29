@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+
+# Local secrets and config
+appsettings.Development.json
+appsettings.*.local.json
+secrets.json
+.env
+.env.*
+*.pfx
+*.pem
+*.key
+
+# Local data and notes
+*.bacpac
+redeployment.txt
+
+# Source control and tooling
+.git
+.gitignore
+.vs/
+.vscode/
+.idea/
+*.user
+Dockerfile
+.dockerignore

@@ -14,8 +14,9 @@ P48 is a comprehensive, full-stack Online Event Ticketing and Management System 
 - **QR Code Generation**: Unique QR codes generated for each ticket to facilitate quick and secure check-ins at the venue.
 - **My Bookings**: Easy access for attendees to view and manage their past and upcoming event tickets.
 - **Cloud Integration**: 
-  - **Azure SQL Database** for reliable, scalable, and secure data storage.
-  - **Azure Blob Storage** for efficient handling of media files like event banners and user avatars.
+  - **Amazon RDS for SQL Server** for reliable, scalable, and secure data storage.
+  - **Amazon S3** for efficient handling of media files like event banners.
+  - **Amazon SES** for welcome and booking confirmation emails.
 
 ## 💻 Tech Stack
 
@@ -30,10 +31,15 @@ P48 is a comprehensive, full-stack Online Event Ticketing and Management System 
 - **JWT (JSON Web Tokens)**: Standardized method for securing endpoints.
 - **SQL Server**: Relational database management.
 
-### Azure (Cloud Infrastructure)
-- **Azure SQL Database**: Managed relational database service.
-- **Azure Blob Storage**: Object storage for unstructured data.
-- **Azure App Service**: Fully managed platform for web app hosting.
+### AWS (Cloud Infrastructure)
+- **AWS Amplify**: Hosts the React frontend.
+- **Amazon ECS Express Mode (Fargate)**: Runs the backend container behind a managed load balancer (health check at `/health`).
+- **Amazon ECR**: Stores the backend Docker images.
+- **Amazon RDS for SQL Server**: Managed relational database (apply EF Core migrations manually with `dotnet ef database update`).
+- **Amazon S3**: Object storage for event poster images.
+- **AWS Secrets Manager**: Holds the database connection string and the JWT signing key.
+- **Amazon SES**: Sends transactional emails (sender must be verified in SES).
+- **GitHub Actions with OIDC**: `.github/workflows/deploy-aws.yml` builds the backend image, pushes it to ECR and deploys it to ECS using a short-lived IAM role, with no stored AWS keys.
 
 ## 📂 Folder Structure
 

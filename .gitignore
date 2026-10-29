@@ -63,3 +63,9 @@ dist-ssr
 *.sln
 *.sw?
 >>>>>>> 99d461b779b18391db45123b13e1ac9472642e41
+
+# Personal deployment notes
+redeployment.txt
+
+# Database exports (contain real data)
+*.bacpac

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Select from 'react-select';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   PlusCircle, BarChart3, Users, DollarSign, Star, Calendar, MapPin, 
-  Trash2, CheckCircle2, AlertCircle, Image as ImageIcon, Loader2, RefreshCw, Ticket
+  Trash2, CheckCircle2, AlertCircle, Image as ImageIcon, Loader2, RefreshCw, Ticket, ScanLine
 } from 'lucide-react';
 import styles from './OrganizerPortal.module.css';
 import eventService from '../services/eventService';
@@ -12,7 +13,7 @@ import { parseJwt } from '../utils/jwtHelper';
 import OrganizerEventRow from './organizer/OrganizerEventRow';
 import EditEventModal from './organizer/EditEventModal';
 import bookingService from '../services/bookingService';
-import { mapEventDtos } from '../utils/eventMapper';
+import { mapEventDtos, IMAGE_PRESETS, presetKeyForCategory, CATEGORY_OPTIONS } from '../utils/eventMapper';
 
 const LOCATION_OPTIONS = [
   { value: 'Mumbai',    label: 'Mumbai' },
@@ -22,17 +23,6 @@ const LOCATION_OPTIONS = [
   { value: 'Pune',      label: 'Pune' },
   { value: 'Chennai',   label: 'Chennai' },
   { value: 'Remote',    label: 'Online (Remote)' },
-];
-
-const CATEGORY_OPTIONS = [
-  { value: 'Music', label: 'Music' },
-  { value: 'Tech', label: 'Tech' },
-  { value: 'Food', label: 'Food' },
-  { value: 'Sports', label: 'Sports' },
-  { value: 'Workshop', label: 'Workshop' },
-  { value: 'Comedy', label: 'Comedy' },
-  { value: 'Festival', label: 'Festival' },
-  { value: 'Education', label: 'Education' }
 ];
 
 const selectStyles = {
@@ -81,6 +71,7 @@ const selectStyles = {
 
 export default function OrganizerPortal({ eventList: initialEventList, setEventList: setParentEventList, bookedTickets }) {
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   // ─── Own event list fetched from backend ──────────────────────────────────
   // We maintain local state here (not relying on App.jsx's shared eventList)
@@ -188,25 +179,24 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Image Presets mapping
-  const presets = {
-    music: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=800",
-    tech: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800",
-    food: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=800",
-    sports: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=800",
-    comedy: "https://images.unsplash.com/photo-1585699324551-f6c309eed262?auto=format&fit=crop&q=80&w=800",
-    workshop: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=800"
-  };
+  // Image presets are shared with the event mapper
+  const presets = IMAGE_PRESETS;
 
   // Analytics driven from the live myEvents list and actual database bookings
   const metrics = React.useMemo(() => {
     let dbRevenue = 0;
     let dbTicketsCount = 0;
+    let checkedInTickets = 0;
+    let checkedInBookings = 0;
     
     // 1. Calculate totals from the database bookings
     organizerBookings.forEach(booking => {
       dbTicketsCount += (booking.numberOfTickets || 0);
       dbRevenue += (booking.totalPrice || 0);
+      if (booking.checkedInAt) {
+        checkedInTickets += (booking.numberOfTickets || 0);
+        checkedInBookings += 1;
+      }
     });
 
     // 2. Add local state bookings (for optimistic UI updates during the current session)
@@ -226,6 +216,10 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
     return {
       listedEvents: totalListedEvents,
       ticketsSold: dbTicketsCount + localTicketsCount,
+      dbTicketsCount,
+      checkedInTickets,
+      checkedInBookings,
+      totalBookings: organizerBookings.length,
       revenue: dbRevenue + localRevenue,
       avgRating,
     };
@@ -271,6 +265,7 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
     formData.append('Date', new Date(date).toISOString());
     formData.append('Location', location);
     formData.append('TotalCapacity', totalCapacity);
+    if (category) formData.append('Category', category);
     
     parsedTicketTypes.forEach((tt, index) => {
       formData.append(`TicketTypes[${index}].Name`, tt.name);
@@ -386,6 +381,18 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
           <span className={styles.badge}><BarChart3 size={12} /> HOST CONTROL CENTER</span>
           <h1>Organizer Dashboard</h1>
           <p>Monitor event performance, oversee attendee registration lists, and publish new experiences to the platform.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/organizer/check-in')}
+            style={{
+              marginTop: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.75rem 1.25rem', border: 'none', borderRadius: '0.6rem', cursor: 'pointer',
+              background: 'linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%)',
+              color: '#fff', fontWeight: 700, fontSize: '1rem'
+            }}
+          >
+            <ScanLine size={18} /> Open Check-in
+          </button>
         </div>
       </div>
 
@@ -407,6 +414,9 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
           </div>
           <div className={styles.metricValue}>{metrics.ticketsSold.toLocaleString('en-IN')}</div>
           <div className={styles.metricSubtext}>+ {bookedTickets.reduce((a,c)=>a+c.quantity, 0)} sold this session</div>
+          <div className={styles.metricSubtext}>
+            Checked in: {metrics.checkedInTickets} of {metrics.dbTicketsCount} tickets ({metrics.checkedInBookings} of {metrics.totalBookings} bookings)
+          </div>
         </div>
 
         <div className={`${styles.metricCard} glass-card`}>
@@ -468,7 +478,14 @@ export default function OrganizerPortal({ eventList: initialEventList, setEventL
                   inputId="category"
                   options={CATEGORY_OPTIONS}
                   value={CATEGORY_OPTIONS.find(opt => opt.value === category) ?? null}
-                  onChange={(selected) => setCategory(selected?.value ?? '')}
+                  onChange={(selected) => {
+                    const value = selected?.value ?? '';
+                    setCategory(value);
+                    // Keep the poster preview in step with the category (presets are never sent to the server)
+                    if (value && !imageFile && customImage.trim() === '') {
+                      setImagePreset(presetKeyForCategory(value));
+                    }
+                  }}
                   isSearchable={false}
                   styles={selectStyles}
                   menuPortalTarget={document.body}

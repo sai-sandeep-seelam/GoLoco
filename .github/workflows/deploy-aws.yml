@@ -1,0 +1,81 @@
+name: Deploy backend to AWS (ECS Express Mode)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-aws.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+# Never run two deploys at once; a second push waits for the first to finish
+concurrency:
+  group: deploy-aws
+  cancel-in-progress: false
+
+env:
+  ECR_REPOSITORY_URI: 612076369467.dkr.ecr.ap-south-1.amazonaws.com/goloco-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::612076369467:role/goloco-github-actions-role
+          aws-region: ap-south-1
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        run: |
+          docker build -t "$ECR_REPOSITORY_URI:${{ github.sha }}" ./backend
+          docker push "$ECR_REPOSITORY_URI:${{ github.sha }}"
+
+      - name: Deploy to ECS Express Mode
+        uses: aws-actions/amazon-ecs-deploy-express-service@v1
+        with:
+          service-name: goloco-api-1315
+          cluster: default
+          image: ${{ env.ECR_REPOSITORY_URI }}:${{ github.sha }}
+          execution-role-arn: arn:aws:iam::612076369467:role/ecsTaskExecutionRole
+          infrastructure-role-arn: arn:aws:iam::612076369467:role/ecsInfrastructureRoleForExpressServices
+          task-role-arn: arn:aws:iam::612076369467:role/goloco-task-role
+          container-port: 8080
+          health-check-path: /health
+          cpu: '1024'
+          memory: '2048'
+          security-groups: sg-0b4bbe1d221a37805
+          subnets: subnet-062b225a8f7908ade,subnet-0df9133f2e6dbebfc,subnet-00e50dc74fc0d467c
+          min-task-count: 1
+          max-task-count: 2
+          auto-scaling-metric: AVERAGE_CPU
+          auto-scaling-target-value: 60
+          log-group: /aws/ecs/default/goloco-api-1315-22a0
+          log-stream-prefix: ecs
+          environment-variables: |
+            [
+              {"name":"AllowedOrigins__0","value":"https://main.d2d5770rh4p3sx.amplifyapp.com"},
+              {"name":"JwtSettings__Issuer","value":"OnlineEventTicketManagementAPI"},
+              {"name":"JwtSettings__Audience","value":"OnlineEventTicketManagementClient"},
+              {"name":"AwsS3__BucketName","value":"goloco-images"},
+              {"name":"AwsS3__Region","value":"ap-south-1"},
+              {"name":"Storage__Provider","value":"S3"},
+              {"name":"Email__SenderAddress","value":"likhit.chalikonda@gmail.com"},
+              {"name":"Email__SenderName","value":"GoLoco"},
+              {"name":"Email__Region","value":"ap-south-1"}
+            ]
+          secrets: |
+            [
+              {"name":"ConnectionStrings__DefaultConnection","valueFrom":"arn:aws:secretsmanager:ap-south-1:612076369467:secret:goloco/db-connection-uDwiXT"},
+              {"name":"JwtSettings__Key","valueFrom":"arn:aws:secretsmanager:ap-south-1:612076369467:secret:goloco/jwt-key-cMobLJ:JwtKey::"}
+            ]

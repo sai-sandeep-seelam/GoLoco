@@ -59,6 +59,53 @@ namespace OnlineEventTicketManagement.Repositories
                 .ToListAsync();
         }
         /// <summary>
+        /// Fetches all bookings for events organized by the given user.
+        /// </summary>
+        public async Task<IEnumerable<Booking>> GetBookingsByOrganizerIdAsync(int organizerId)
+        {
+            return await _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Event)
+                .Include(b => b.TicketType)
+                .Include(b => b.Seats)
+                .Where(b => b.Event.OrganizerId == organizerId)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Fetches a booking by its ticket code (read-only), with User, Event, TicketType and Seats.
+        /// </summary>
+        public async Task<Booking?> GetByTicketCodeWithDetailsAsync(string ticketCode)
+        {
+            return await _context.Bookings
+                .AsNoTracking()
+                .Include(b => b.User)
+                .Include(b => b.Event)
+                .Include(b => b.TicketType)
+                .Include(b => b.Seats)
+                .FirstOrDefaultAsync(b => b.TicketCode == ticketCode);
+        }
+
+        /// <summary>
+        /// One conditional UPDATE: the database decides the winner, so two simultaneous
+        /// scans of the same ticket can never both succeed.
+        /// </summary>
+        public async Task<bool> TryCheckInAsync(string ticketCode, int? eventId, int organizerId, DateTime nowUtc)
+        {
+            int rows = await _context.Bookings
+                .Where(b => b.TicketCode == ticketCode
+                            && b.CheckedInAt == null
+                            && b.Status == "Confirmed"
+                            && (eventId == null || b.EventId == eventId)
+                            && _context.Events.Any(e => e.Id == b.EventId && e.OrganizerId == organizerId))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(b => b.CheckedInAt, (DateTime?)nowUtc)
+                    .SetProperty(b => b.CheckedInByUserId, (int?)organizerId)
+                    .SetProperty(b => b.UpdatedAt, (DateTime?)nowUtc));
+            return rows == 1;
+        }
+
+        /// <summary>
         /// Fetches all bookings belonging to a specific event.
         /// Used by EventService when deleting an event to remove related bookings first.
         /// </summary>

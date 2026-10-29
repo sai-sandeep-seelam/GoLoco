@@ -5,10 +5,30 @@ import { request } from './apiClient';
  */
 export const bookingService = {
   /**
-   * Fetch all bookings for the currently authenticated user.
+   * Fetch the bookings for the logged-in attendee (their own tickets, with ticket codes).
+   */
+  async getMyBookings() {
+    return request('/bookings/my');
+  },
+
+  /**
+   * Organizer only: fetch the bookings for the logged-in organizer's own events.
    */
   async getUserBookings() {
     return request('/bookings');
+  },
+
+  /**
+   * Organizer only: check a ticket in at the door (marks it used once).
+   * @param {string} code - The ticket code from the QR
+   * @param {number|null} eventId - Optional: only accept tickets for this event
+   * @returns {Promise<{result: string, message: string, admitCount: number, ...}>}
+   */
+  async checkIn(code, eventId = null) {
+    return request('/bookings/check-in', {
+      method: 'POST',
+      body: { code, eventId },
+    });
   },
 
   /**

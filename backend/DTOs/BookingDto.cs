@@ -34,7 +34,13 @@ namespace OnlineEventTicketManagement.DTOs
         // Assigned seats (empty list when no specific seats were selected)
         public List<string> SelectedSeats { get; set; } = new();
 
-        // Base64 encoded QR code string (Data URI)
-        public string QrCodeDataUrl { get; set; } = string.Empty;
+        /// <summary>
+        /// The secret code shown as the ticket QR. Only returned to the booking's owner;
+        /// null in organizer views.
+        /// </summary>
+        public string? TicketCode { get; set; }
+
+        /// <summary>UTC time the booking was checked in at the venue; null if not used yet.</summary>
+        public DateTime? CheckedInAt { get; set; }
     }
 }
